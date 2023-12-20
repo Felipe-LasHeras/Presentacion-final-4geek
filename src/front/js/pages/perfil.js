@@ -73,62 +73,68 @@ export const Perfil = () => {
     lastName: "",
     email: "",
     telefono: "",
+    rubro: "",
     comuna: ""
   });
 
-useEffect(() => {
-  let token = localStorage.getItem("token")
-  console.log(token)
-  let user = JSON.parse(localStorage.getItem("user"))
-  console.log(user)
-  fetch("http://localhost:3001/api/perfil_logeado", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      //"Authorization": "Bearer " + token
-    },
-    body: JSON.stringify({email: user.email})
-  })
-  .then(response => response.json())
-  .then(data => {
-   setFormData({
-      ...formData,
-      firstName: data.usuario.nombre,
-      lastName: data.usuario.apellido,
-      email: data.usuario.email,
-      comuna: data.usuario.comuna,
-      telefono: data.usuario.telefono
-    })
-  })
-  .catch(error => console.log (error))
-},[])
-const [data, setData] = useState(data); // Datos de publicaciones
+  const [data, setData] = useState([]); 
 
-  const [filteredCategoria, setFilteredCategoria] = useState(null); // Estado para filtrar por categoría
   useEffect(() => {
-    fetch("http://localhost:3001/publicaciones")
+    let token = localStorage.getItem("token");
+    let user = JSON.parse(localStorage.getItem("user"));
+  
+    fetch("http://localhost:3001/api/perfil_logeado", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        //"Authorization": "Bearer " + token
+      },
+      body: JSON.stringify({ email: user.email }),
+    })
       .then((response) => response.json())
       .then((data) => {
+        setFormData({
+          ...formData,
+          firstName: data.usuario.nombre,
+          lastName: data.usuario.apellido,
+          email: data.usuario.email,
+          comuna: data.usuario.comuna,
+          telefono: data.usuario.telefono,
+          rubro: data.usuario.rubro,
+        });
+  
+        // Establecer las publicaciones en el estado
         setData(data.publicaciones);
-      });
+      })
+      .catch((error) => console.log(error));
   }, []);
-  const handleCategoriaFilter = (categoria) => {
-    setFilteredCategoria(categoria === filteredCategoria ? null : categoria);
-  };
 
-  const handleInputChange = (e) => {
+const [correoElectronicoFiltrar, setCorreoElectronicoFiltrar] = useState(''); // Agrega un estado para el correo electrónico a filtrar
+
+useEffect(() => {
+  fetch("http://localhost:3001/publicaciones-perfil")
+    .then((response) => response.json())
+    .then((data) => {
+      // Filtra las publicaciones por correo electrónico
+      const publicacionesFiltradas = data.publicaciones.filter(publicacion => publicacion.email === correoElectronicoFiltrar);
+
+      // Almacena las publicaciones filtradas en el estado
+      setData(publicacionesFiltradas);
+    });
+}, [correoElectronicoFiltrar]); // Agrega correoElectronicoFiltrar a las dependencias para que el efecto se vuelva a ejecutar cuando cambie
+  
+
+const handleInputChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
+  const handleEditProfile = async () => {
     try {
       const response = await fetch("http://localhost:3001/api/perfil", {
-        method: "POST",
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
@@ -136,12 +142,10 @@ const [data, setData] = useState(data); // Datos de publicaciones
       });
 
       if (response.ok) {
-        // Manejar la respuesta exitosa del servidor
-        const data = await response.json();
-        console.log("Registro exitoso:", data);
+        console.log("Perfil actualizado exitosamente");
+        // Puedes agregar lógica adicional aquí, si es necesario
       } else {
-        // Manejar errores
-        console.error("Error al registrar usuario");
+        console.error("Error al actualizar el perfil");
       }
     } catch (error) {
       console.error("Error de red:", error);
@@ -149,7 +153,7 @@ const [data, setData] = useState(data); // Datos de publicaciones
   };
   const handleDelete = async (id) => {
     try {
-      const response = await fetch(`http://localhost:3001/publicaciones/${id}`, {
+      const response = await fetch(`http://localhost:3001/publicacion/${id}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -172,11 +176,11 @@ const [data, setData] = useState(data); // Datos de publicaciones
   return (
     <div className="profile-container mt-4">
       <div className="header">
-        <h1 className="profile-name">Nombre Cliente</h1>
+        <h1 className="profile-name">¡Bienvenido {formData.firstName}!</h1>
       </div>
 
       {/* Formulario de datos */}
-      <form className="data-form" onSubmit={handleSubmit}>
+      <form className="data-form">
         <div className="form-group">
           <label htmlFor="firstName">Nombre:</label>
           <input
@@ -185,6 +189,7 @@ const [data, setData] = useState(data); // Datos de publicaciones
             name="firstName"
             value={formData.firstName}
             onChange={handleInputChange}
+            disabled
           />
         </div>
         <div className="form-group mt-2">
@@ -195,6 +200,7 @@ const [data, setData] = useState(data); // Datos de publicaciones
             name="lastName"
             value={formData.lastName}
             onChange={handleInputChange}
+            disabled
           />
         </div>
         <div className="form-group mt-2">
@@ -227,10 +233,22 @@ const [data, setData] = useState(data); // Datos de publicaciones
             onChange={handleInputChange}
           />
         </div>
+        <div className="form-group mt-2">
+          <label htmlFor="rubro">Rubro:</label>
+          <input
+            type="text"
+            id="rubro"
+            name="rubro"
+            value={formData.rubro}
+            onChange={handleInputChange}
+          />
+        </div>
       </form>
       <div className="button-container">
-        <button
+      <button
+          type="button"
           className="action-button custom-button"
+          onClick={handleEditProfile}
           style={{
             borderRadius: "12px",
             borderColor: "white",
@@ -239,24 +257,25 @@ const [data, setData] = useState(data); // Datos de publicaciones
             color: "black",
             textAlign: "center",
           }}
-          type="submit"
         >
           Guardar
         </button>
-        <Link to="/generadorPublicacion">
-          <button
-            className="action-button custom-button"
-            style={{
-              borderRadius: "12px",
-              borderColor: "white",
-              backgroundColor: "#2c94da",
-              height: "40px",
-              color: "black",
-              textAlign: "center",
-            }}
-          >
-            Publicar Trabajo
-          </button>
+       <Link to="/generadorPublicacion">
+          {["Electricista", "Carpintero", "Pintor", "Gasfitería", "Aseo"].includes(formData.rubro) && (
+            <button
+              className="action-button custom-button"
+              style={{
+                borderRadius: "12px",
+                borderColor: "white",
+                backgroundColor: "#2c94da",
+                height: "40px",
+                color: "black",
+                textAlign: "center",
+              }}
+            >
+              Publicar Trabajo
+            </button>
+          )}
         </Link>
         <Link to="/">
           {" "}

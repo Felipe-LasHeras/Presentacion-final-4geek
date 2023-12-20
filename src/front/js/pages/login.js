@@ -39,7 +39,7 @@ const Login = () => {
           console.log("Usuario encontrado");
 
           localStorage.setItem("user", JSON.stringify(data.user));
-          localStorage.setItem("token", JSON.stringify(data.access_token))
+          localStorage.setItem("token", JSON.stringify(data.access_token));
           // Utiliza `navigate` para redirigir a la página principal después del inicio de sesión
           navigate("/");
         }
@@ -60,13 +60,14 @@ const Login = () => {
           background: "#D1EFEA",
           margin: "auto",
           padding: "20px",
-          backgroundColor: "#CCCCCC", // Agregado para establecer el fondo gris
-          boxShadow: "0 0 70px #000",
+          backgroundColor: "white", // Agregado para establecer el fondo gris
+          boxShadow: "0 0 45px #546",
+          opacity: "0.9",
         }}
       >
         <h2
           style={{
-            fontFamily: "fantasy",
+            fontFamily: "Calibri",
             color: "#001F3F",
             marginTop: "5px",
             boxShadow: "initial",
@@ -77,7 +78,7 @@ const Login = () => {
         <form>
           <div className="mb-6 mt-3">
             <label htmlFor="usuario mt-5" className="form-label">
-              <strong>Usuario:</strong>
+              <strong>Correo:</strong>
             </label>
             <input
               type="text"
@@ -103,25 +104,32 @@ const Login = () => {
             {error && <div className="invalid-feedback">{error}</div>}
           </div>
 
-          <button
-            type="button"
-            className="btn btn-primary mt-5 me-5"
-            style={{ width: "40%" }}
-            onClick={handleLogin}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-evenly",
+              alignItems: "center",
+            }}
           >
-            Iniciar sesión
-          </button>
-
-          <Link to="/Home">
             <button
               type="button"
-              className="btn btn-danger mt-5 me-2"
+              className="btn btn-primary mt-5"
               style={{ width: "40%" }}
-              onClick={() => window.close()}
+              onClick={handleLogin}
             >
-              Cerrar
+              Iniciar sesión
             </button>
-          </Link>
+
+            <Link to="/Home">
+              <button
+                type="button"
+                className="btn btn-danger mt-5"
+                onClick={() => window.close()}
+              >
+                Cerrar
+              </button>
+            </Link>
+          </div>
         </form>
       </div>
     </div>
